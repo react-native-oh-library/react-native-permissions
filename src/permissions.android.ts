@@ -1,3 +1,4 @@
+import { HarmonyPermissionMap } from './permissions.harmony';
 import type {IOSPermissionMap} from './permissions.ios';
 import type {WindowsPermissionMap} from './permissions.windows';
 
@@ -49,6 +50,7 @@ export type AndroidPermissionMap = typeof ANDROID;
 
 export const PERMISSIONS = Object.freeze({
   ANDROID,
+  HARMONY: {} as HarmonyPermissionMap,
   IOS: {} as IOSPermissionMap,
   WINDOWS: {} as WindowsPermissionMap,
 } as const);

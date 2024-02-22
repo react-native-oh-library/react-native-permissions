@@ -1,6 +1,6 @@
 {
-  "name": "react-native-permissions",
-  "version": "4.1.2",
+  "name": "@react-native-oh-tpl/react-native-permissions",
+  "version": "4.1.2-0.1.1",
   "license": "MIT",
   "description": "An unified permissions API for React Native on iOS, Android and Windows",
   "author": "Mathieu Acthernoene <zoontek@gmail.com>",
@@ -31,14 +31,18 @@
     "/*.podspec",
     "app.plugin.js",
     "mock.js",
-    "react-native.config.js"
+    "react-native.config.js",
+    "/harmony"
   ],
+  "harmony": {
+    "alias": "react-native-permissions"
+  },
   "scripts": {
     "format": "prettier '**/*' -u -w",
     "lint": "eslint './**/*.{js,ts,tsx}'",
     "typecheck": "tsc --noEmit",
     "build": "bob build",
-    "prepack": "prettier '**/*' -u -c && yarn lint && yarn typecheck && yarn build"
+    "prepack": "yarn build"
   },
   "react-native-builder-bob": {
     "source": "src",
@@ -80,7 +84,7 @@
     "prettier": "^3.1.1",
     "prettier-plugin-organize-imports": "^3.2.4",
     "react": "18.2.0",
-    "react-native": "0.73.4",
+    "react-native": "0.73.2",
     "react-native-builder-bob": "^0.23.2",
     "typescript": "^5.3.3"
   }

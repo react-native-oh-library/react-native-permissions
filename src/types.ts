@@ -1,4 +1,5 @@
 import type {AndroidPermissionMap} from './permissions.android';
+import { HarmonyPermissionMap } from './permissions.harmony';
 import type {IOSPermissionMap} from './permissions.ios';
 import type {WindowsPermissionMap} from './permissions.windows';
 import {ResultMap} from './results';
@@ -10,7 +11,8 @@ export type {Rationale} from 'react-native';
 export type AndroidPermission = Values<AndroidPermissionMap>;
 export type IOSPermission = Values<IOSPermissionMap>;
 export type WindowsPermission = Values<WindowsPermissionMap>;
-export type Permission = AndroidPermission | IOSPermission | WindowsPermission;
+export type HarmonyPermission = Values<HarmonyPermissionMap>;
+export type Permission = AndroidPermission | IOSPermission | WindowsPermission | HarmonyPermission;
 
 export type PermissionStatus = Values<ResultMap>;
 
