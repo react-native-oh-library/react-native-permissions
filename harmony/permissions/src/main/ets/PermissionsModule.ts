@@ -22,6 +22,7 @@ export class PermissionsModule extends TurboModule {
     } catch (error) {
       let err: BusinessError = error as BusinessError;
       console.error(`Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`);
+      return `Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`;
     }
     // 校验应用是否被授予权限
     try {
@@ -30,6 +31,7 @@ export class PermissionsModule extends TurboModule {
     } catch (error) {
       let err: BusinessError = error as BusinessError;
       console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
+      return `Failed to check access token. Code is ${err.code}, message is ${err.message}`;
     }
     return resultsStatus;
   }
@@ -49,6 +51,7 @@ export class PermissionsModule extends TurboModule {
     } catch (error) {
       let err: BusinessError = error as BusinessError;
       console.error(`Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`);
+      return `Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`
     }
     for (let index = 0; index < permissions.length; index++) {
       // 校验应用是否被授予权限
@@ -58,6 +61,7 @@ export class PermissionsModule extends TurboModule {
       } catch (error) {
         let err: BusinessError = error as BusinessError;
         console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
+        return `Failed to check access token. Code is ${err.code}, message is ${err.message}`
       }
     }
     return grantStatus;
@@ -82,6 +86,7 @@ export class PermissionsModule extends TurboModule {
         return resultsStatus;
       } catch (err) {
         console.error(`catch err->${JSON.stringify(err)}`);
+        return `catch err->${JSON.stringify(err)}`;
       }
     }
   }
@@ -91,7 +96,7 @@ export class PermissionsModule extends TurboModule {
    */
   async requestMultiple(permissions: Array<Permissions>): Promise<Object> {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let resultsStatus: GrantStatus[];
+    let resultsStatus: GrantStatus[] = [];
     try {
       let context = this.ctx.uiAbilityContext;
       const resultData = await atManager.requestPermissionsFromUser(context, permissions)
@@ -101,6 +106,7 @@ export class PermissionsModule extends TurboModule {
       return resultsStatus;
     } catch (err) {
       console.error(`catch err->${JSON.stringify(err)}`);
+      return `catch err->${JSON.stringify(err)}`;
     }
   }
 
