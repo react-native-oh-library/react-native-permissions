@@ -5,6 +5,7 @@ import notificationManager from '@ohos.notificationManager';
 import Base from '@ohos.base';
 import { GrantStatus, NotificationsResponse } from './results';
 
+
 export class PermissionsModule extends TurboModule {
   /**
    * 检查单个权限的授权状态
@@ -117,13 +118,45 @@ export class PermissionsModule extends TurboModule {
     return new Promise((resolve, reject) => {
       notificationManager.requestEnableNotification().then(() => {
         resolve({
-          status: { READ: 'granted'},
+          status: GrantStatus.PERMISSION_GRANTED,
           settings: {}
         })
       }).catch((err: Base.BusinessError) => {
         reject(err)
       });
     })
+  }
+
+  /**
+   * 应用查询通知使能
+   * */
+  checkNotifications() {
+    return new Promise((resolve, reject) => {
+      notificationManager.isNotificationEnabled().then((data: boolean) => {
+        resolve({
+          status: data ? GrantStatus.PERMISSION_GRANTED : GrantStatus.PERMISSION_BLOCKED,
+          settings: {}
+        })
+      }).catch((err: Base.BusinessError) => {
+        reject(err)
+      });
+    })
+  }
+
+  /**
+   * 用来打开设置页面引导用户到设置页面开启或关闭某些权限
+   * */
+  openSettings(): void {
+    let context = this.ctx.uiAbilityContext;
+    let want = {
+      bundleName: 'com.huawei.hmos.settings',
+      abilityName: 'com.huawei.hmos.settings.MainAbility'
+    };
+    context.startAbility(want)
+      .then(() => {})
+      .catch((err) => {
+        console.error(`Failed to startAbility. Code: ${err.code}, message: ${err.message}`);
+      });
   }
 
   private checkStatus(status: number): GrantStatus {

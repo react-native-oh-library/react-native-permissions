@@ -5,7 +5,7 @@ export enum GrantStatus {
 }
 
 export type NotificationsResponse = {
-  status: Object;
+  status: string;
   settings: Object;
 };
 
