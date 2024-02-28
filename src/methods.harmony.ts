@@ -1,8 +1,6 @@
 import NativeModule from './NativePermissionsModule';
 import type { Contract } from './contract';
-import type { NotificationOption, NotificationsResponse, Permission, PermissionStatus } from './types';
-import { checkLocationAccuracy, openPhotoPicker, requestLocationAccuracy } from './unsupportedPlatformMethods';
-
+import type { LocationAccuracy, NotificationOption, NotificationsResponse, Permission, PermissionStatus } from './types';
 /**
  * 检查单个权限的授权状态
  * */
@@ -15,23 +13,6 @@ function check(permission: Permission): Promise<PermissionStatus> {
  * */
 async function checkMultiple<P extends Permission[]>(permissions: P): Promise<Record<P[number], PermissionStatus>> {
     return await NativeModule.checkMultiple(permissions) as Promise<Record<P[number], PermissionStatus>>
-}
-/**
- * 检查通知权限的状态
-*/
-export function checkNotifications(): Promise<NotificationsResponse> {
-    return new Promise((_resolve, reject) => {
-        reject('checkNotifications is not supported on Harmony')
-    })
-}
-
-/**
- * 用来打开设置页面引导用户到设置页面开启或关闭某些权限
-*/
-async function openSettings(): Promise<void> {
-    return new Promise((_resolve, reject) => {
-        reject('openSettings is not supported on Harmony')
-    })
 }
 
 /**
@@ -50,10 +31,51 @@ async function requestMultiple<P extends Permission[]>(permissions: P): Promise<
 }
 
 /**
+ * 检查通知权限的状态
+*/
+export function checkNotifications(): Promise<NotificationsResponse> {
+    return NativeModule.checkNotifications() as Promise<NotificationsResponse>;
+}
+
+/**
  * 用于请求通知权限
 */
 export function requestNotifications(options: NotificationOption[]): Promise<NotificationsResponse> {
     return NativeModule.requestNotifications(options) as Promise<NotificationsResponse>;
+}
+
+/**
+ * 用来打开设置页面引导用户到设置页面开启或关闭某些权限
+*/
+async function openSettings(): Promise<void> {
+     NativeModule.openSettings();
+}
+
+/**
+ * 检查设备位置权限
+*/
+async function checkLocationAccuracy(): Promise<LocationAccuracy> {
+    return new Promise((_resolve, reject) => {
+        reject('checkLocationAccuracy is not supported on Harmony')
+    })
+}
+
+/**
+ * 设置设备位置权限
+*/
+async function requestLocationAccuracy(): Promise<LocationAccuracy> {
+    return new Promise((_resolve, reject) => {
+        reject('requestLocationAccuracy is not supported on Harmony')
+    })
+}
+
+/**
+ * 请求访问设备相册图片权限
+*/
+async function openPhotoPicker(): Promise<void> {
+    return new Promise((_resolve, reject) => {
+        reject('openPhotoPicker is not supported on Harmony')
+    })
 }
 
 export const methods: Contract = {
