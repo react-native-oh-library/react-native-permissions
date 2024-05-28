@@ -41,9 +41,9 @@ export class PermissionsModule extends TurboModule {
    * 检查多个权限的授权状态
    * */
   async checkMultiple(permissions: Array<Permissions>): Promise<Object> {
-    type PermissionStatusRecord = Record<Permissions, GrantStatus>;
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    const grantStatus:Array<PermissionStatusRecord> = [];
+    type PermissionStatusRecord = Record<string, GrantStatus>;
+    let grantStatus:PermissionStatusRecord= {};
     // 获取应用程序的accessTokenID
     let tokenId: number = 0;
     try {
@@ -60,7 +60,7 @@ export class PermissionsModule extends TurboModule {
       try {
         // 结构体存储请求内容和请求结果状态
         const Status = await atManager.checkAccessToken(tokenId, permissions[index]);
-        grantStatus.push({[permissions[index]]:this.checkStatus(Status)} as PermissionStatusRecord);
+        grantStatus[permissions[index]]=this.checkStatus(Status);
       } catch (error) {
         let err: BusinessError = error as BusinessError;
         console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
@@ -100,15 +100,15 @@ export class PermissionsModule extends TurboModule {
    * 请求多个权限
    */
   async requestMultiple(permissions: Array<Permissions>): Promise<Object> {
-    type PermissionStatusRecord = Record<Permissions, GrantStatus>;
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    const resultsStatus: Array<PermissionStatusRecord> = [];
+    type PermissionStatusRecord = Record<string, GrantStatus>;
+    let resultsStatus:PermissionStatusRecord= { };
     try {
       let context = this.ctx.uiAbilityContext;
       const resultData = await atManager.requestPermissionsFromUser(context, permissions)
       for (let index = 0; index < resultData.authResults.length; index++) {
         const status = this.checkStatus(resultData.authResults[index]);
-        resultsStatus.push({ [permissions[index]]: status } as PermissionStatusRecord);
+        resultsStatus[permissions[index]]=status;
       }
       return resultsStatus;
     } catch (err) {
@@ -116,8 +116,6 @@ export class PermissionsModule extends TurboModule {
       return `catch err->${JSON.stringify(err)}`;
     }
   }
-
-
   /**
    * 应用请求通知使能
    * */
