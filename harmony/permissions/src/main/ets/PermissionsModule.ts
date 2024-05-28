@@ -1,9 +1,9 @@
-import { TurboModule } from 'rnoh/ts';
+import { TurboModule } from '@rnoh/react-native-openharmony/ts';
 import { abilityAccessCtrl, bundleManager, Permissions } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import notificationManager from '@ohos.notificationManager';
 import Base from '@ohos.base';
-import { GrantStatus, NotificationsResponse } from './results';
+import { GrantStatus, NotificationsResponse ,RecordPer} from './results';
 
 
 export class PermissionsModule extends TurboModule {
@@ -41,8 +41,9 @@ export class PermissionsModule extends TurboModule {
    * 检查多个权限的授权状态
    * */
   async checkMultiple(permissions: Array<Permissions>): Promise<Object> {
+    type PermissionStatusRecord = Record<Permissions, GrantStatus>;
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let grantStatus: GrantStatus[] = [];
+    const grantStatus:Array<PermissionStatusRecord> = [];
     // 获取应用程序的accessTokenID
     let tokenId: number = 0;
     try {
@@ -57,8 +58,9 @@ export class PermissionsModule extends TurboModule {
     for (let index = 0; index < permissions.length; index++) {
       // 校验应用是否被授予权限
       try {
-        let Status = await atManager.checkAccessToken(tokenId, permissions[index]);
-        grantStatus.push(this.checkStatus(Status));
+        // 结构体存储请求内容和请求结果状态
+        const Status = await atManager.checkAccessToken(tokenId, permissions[index]);
+        grantStatus.push({[permissions[index]]:this.checkStatus(Status)} as PermissionStatusRecord);
       } catch (error) {
         let err: BusinessError = error as BusinessError;
         console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
@@ -67,6 +69,8 @@ export class PermissionsModule extends TurboModule {
     }
     return grantStatus;
   }
+
+
 
   /**
    * 请求权限
@@ -96,13 +100,15 @@ export class PermissionsModule extends TurboModule {
    * 请求多个权限
    */
   async requestMultiple(permissions: Array<Permissions>): Promise<Object> {
+    type PermissionStatusRecord = Record<Permissions, GrantStatus>;
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let resultsStatus: GrantStatus[] = [];
+    const resultsStatus: Array<PermissionStatusRecord> = [];
     try {
       let context = this.ctx.uiAbilityContext;
       const resultData = await atManager.requestPermissionsFromUser(context, permissions)
       for (let index = 0; index < resultData.authResults.length; index++) {
-        resultsStatus.push(this.checkStatus(resultData.authResults[index]));
+        const status = this.checkStatus(resultData.authResults[index]);
+        resultsStatus.push({ [permissions[index]]: status } as PermissionStatusRecord);
       }
       return resultsStatus;
     } catch (err) {
@@ -110,6 +116,7 @@ export class PermissionsModule extends TurboModule {
       return `catch err->${JSON.stringify(err)}`;
     }
   }
+
 
   /**
    * 应用请求通知使能
