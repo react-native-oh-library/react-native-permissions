@@ -1,4 +1,4 @@
-import { TurboModule } from 'rnoh/ts';
+import { TurboModule } from '@rnoh/react-native-openharmony/ts';
 import { abilityAccessCtrl, bundleManager, Permissions } from '@kit.AbilityKit';
 import { BusinessError } from '@kit.BasicServicesKit';
 import notificationManager from '@ohos.notificationManager';
@@ -36,13 +36,12 @@ export class PermissionsModule extends TurboModule {
     }
     return resultsStatus;
   }
-
   /**
    * 检查多个权限的授权状态
    * */
   async checkMultiple(permissions: Array<Permissions>): Promise<Object> {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let grantStatus: GrantStatus[] = [];
+    let grantStatus: Record<string, GrantStatus> = {};
     // 获取应用程序的accessTokenID
     let tokenId: number = 0;
     try {
@@ -57,8 +56,8 @@ export class PermissionsModule extends TurboModule {
     for (let index = 0; index < permissions.length; index++) {
       // 校验应用是否被授予权限
       try {
-        let Status = await atManager.checkAccessToken(tokenId, permissions[index]);
-        grantStatus.push(this.checkStatus(Status));
+        const Status = await atManager.checkAccessToken(tokenId, permissions[index]);
+        grantStatus[permissions[index]] = this.checkStatus(Status);
       } catch (error) {
         let err: BusinessError = error as BusinessError;
         console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
@@ -97,12 +96,13 @@ export class PermissionsModule extends TurboModule {
    */
   async requestMultiple(permissions: Array<Permissions>): Promise<Object> {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let resultsStatus: GrantStatus[] = [];
+    let resultsStatus: Record<string, GrantStatus> = {};
     try {
       let context = this.ctx.uiAbilityContext;
       const resultData = await atManager.requestPermissionsFromUser(context, permissions)
       for (let index = 0; index < resultData.authResults.length; index++) {
-        resultsStatus.push(this.checkStatus(resultData.authResults[index]));
+        const status = this.checkStatus(resultData.authResults[index]);
+        resultsStatus[permissions[index]] = status;
       }
       return resultsStatus;
     } catch (err) {
@@ -110,7 +110,6 @@ export class PermissionsModule extends TurboModule {
       return `catch err->${JSON.stringify(err)}`;
     }
   }
-
   /**
    * 应用请求通知使能
    * */
