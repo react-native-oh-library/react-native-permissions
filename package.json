@@ -2,17 +2,17 @@
   "name": "@react-native-oh-tpl/react-native-permissions",
   "version": "4.1.2-0.1.3",
   "license": "MIT",
-  "description": "An unified permissions API for React Native on iOS, Android and Windows",
+  "description": "An unified permissions API for React Native on HarmonyOS",
   "author": "Mathieu Acthernoene <zoontek@gmail.com>",
   "homepage": "https://github.com/zoontek/react-native-permissions#readme",
   "repository": {
     "type": "git",
-    "url": "https://github.com/zoontek/react-native-permissions.git"
+    "url": "https://github.com/react-native-oh-library/react-native-permissions"
   },
   "keywords": [
     "react-native",
     "react native",
-    "react-native-windows",
+    "react-native-harmony",
     "permission",
     "authorization"
   ],
@@ -21,14 +21,9 @@
   "module": "dist/module/index.js",
   "react-native": "src/index.ts",
   "files": [
-    "/android",
-    "!/android/build",
     "/dist",
-    "/ios",
     "/scripts",
-    "/windows",
     "/src",
-    "/*.podspec",
     "app.plugin.js",
     "mock.js",
     "react-native.config.js",
@@ -55,8 +50,7 @@
   },
   "peerDependencies": {
     "react": ">=18.1.0",
-    "react-native": ">=0.70.0",
-    "react-native-windows": ">=0.70.0"
+    "react-native": ">=0.70.0"
   },
   "peerDependenciesMeta": {
     "react-native-windows": {
