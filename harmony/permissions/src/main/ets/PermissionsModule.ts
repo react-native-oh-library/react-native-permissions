@@ -4,7 +4,7 @@ import { BusinessError } from '@kit.BasicServicesKit';
 import notificationManager from '@ohos.notificationManager';
 import Base from '@ohos.base';
 import { GrantStatus, NotificationsResponse } from './results';
-
+import { photoAccessHelper } from '@kit.MediaLibraryKit';
 
 export class PermissionsModule extends TurboModule {
   /**
@@ -156,6 +156,24 @@ export class PermissionsModule extends TurboModule {
       .catch((err) => {
         console.error(`Failed to startAbility. Code: ${err.code}, message: ${err.message}`);
       });
+  }
+  /**
+   * 用来打开图片选择
+   * */
+  async openPhotoPicker() {
+    try {
+      let PhotoSelectOptions = new photoAccessHelper.PhotoSelectOptions();
+      PhotoSelectOptions.MIMEType = photoAccessHelper.PhotoViewMIMETypes.IMAGE_TYPE;
+      PhotoSelectOptions.maxSelectNumber = 5;
+      let photoPicker = new photoAccessHelper.PhotoViewPicker();
+      photoPicker.select(PhotoSelectOptions).then((PhotoSelectResult: photoAccessHelper.PhotoSelectResult) => {
+      }).catch((err: BusinessError) => {
+        console.error(`PhotoViewPicker.select failed with err: ${err.code}, ${err.message}`);
+      });
+    } catch (error) {
+      let err: BusinessError = error as BusinessError;
+      console.error(`PhotoViewPicker failed with err: ${err.code}, ${err.message}`);
+    }
   }
 
   private checkStatus(status: number): GrantStatus {
