@@ -73,9 +73,7 @@ async function requestLocationAccuracy(): Promise<LocationAccuracy> {
  * 请求访问设备相册图片权限
 */
 async function openPhotoPicker(): Promise<void> {
-    return new Promise((_resolve, reject) => {
-        reject('openPhotoPicker is not supported on Harmony')
-    })
+    NativeModule.openPhotoPicker()
 }
 
 export const methods: Contract = {

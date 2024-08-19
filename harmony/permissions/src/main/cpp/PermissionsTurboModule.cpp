@@ -39,6 +39,11 @@ static jsi::Value __hostFunction_RTNPermissionsTurboModule_openSettings(jsi::Run
                                                                            const jsi::Value *args, size_t count) {
     return static_cast<ArkTSTurboModule &>(turboModule).callAsync(rt, "openSettings", args, count);
 }
+static jsi::Value __hostFunction_RTNPermissionsTurboModule_openPhotoPicker(jsi::Runtime &rt,
+                                                                           react::TurboModule &turboModule,
+                                                                           const jsi::Value *args, size_t count) {
+    return static_cast<ArkTSTurboModule &>(turboModule).callAsync(rt, "openPhotoPicker", args, count);
+}
 
 RTNPermissionsTurboModule::RTNPermissionsTurboModule(const ArkTSTurboModule::Context ctx, const std::string name)
     : ArkTSTurboModule(ctx, name) {
@@ -49,4 +54,5 @@ RTNPermissionsTurboModule::RTNPermissionsTurboModule(const ArkTSTurboModule::Con
     methodMap_["requestNotifications"] = MethodMetadata{0, __hostFunction_RTNPermissionsTurboModule_requestNotifications};
     methodMap_["checkNotifications"] = MethodMetadata{0, __hostFunction_RTNPermissionsTurboModule_checkNotifications};
     methodMap_["openSettings"] = MethodMetadata{0, __hostFunction_RTNPermissionsTurboModule_openSettings};
+    methodMap_["openPhotoPicker"] = MethodMetadata{0, __hostFunction_RTNPermissionsTurboModule_openPhotoPicker};
 }
