@@ -145,17 +145,13 @@ export class PermissionsModule extends TurboModule {
   /**
    * 用来打开设置页面引导用户到设置页面开启或关闭某些权限
    * */
-  openSettings(): void {
+  async openSettings(): Promise<void> {
     let context = this.ctx.uiAbilityContext;
     let want = {
       bundleName: 'com.huawei.hmos.settings',
       abilityName: 'com.huawei.hmos.settings.MainAbility'
     };
-    context.startAbility(want)
-      .then(() => {})
-      .catch((err) => {
-        console.error(`Failed to startAbility. Code: ${err.code}, message: ${err.message}`);
-      });
+    await context.startAbility(want)
   }
   /**
    * 用来打开图片选择
