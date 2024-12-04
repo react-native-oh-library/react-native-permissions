@@ -5,6 +5,7 @@ import notificationManager from '@ohos.notificationManager';
 import Base from '@ohos.base';
 import { GrantStatus, NotificationsResponse } from './results';
 import { photoAccessHelper } from '@kit.MediaLibraryKit';
+import log from './Logger';
 
 export class PermissionsModule extends TurboModule {
   /**
@@ -12,56 +13,38 @@ export class PermissionsModule extends TurboModule {
    * */
   async check(permission: Permissions): Promise<string> {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
-    let grantStatus: abilityAccessCtrl.GrantStatus = abilityAccessCtrl.GrantStatus.PERMISSION_DENIED;
-    let resultsStatus: GrantStatus = GrantStatus.PERMISSION_BLOCKED;
+
     // 获取应用程序的accessTokenID
-    let tokenId: number = 0;
+    let tokenId: number = await this.getTokenId();
+
+    // 检查权限
     try {
-      let bundleInfo: bundleManager.BundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
-      let appInfo: bundleManager.ApplicationInfo = bundleInfo.appInfo;
-      tokenId = appInfo.accessTokenId;
+      return this.getCheckGrantStatus(await atManager.checkAccessToken(tokenId, permission));
     } catch (error) {
       let err: BusinessError = error as BusinessError;
-      console.error(`Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`);
-      return `Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`;
-    }
-    // 校验应用是否被授予权限
-    try {
-      grantStatus = await atManager.checkAccessToken(tokenId, permission);
-      resultsStatus = grantStatus === -1 ? GrantStatus.PERMISSION_BLOCKED : grantStatus === 0 ? GrantStatus.PERMISSION_GRANTED : GrantStatus.PERMISSION_UNAVAILABLE;
-    } catch (error) {
-      let err: BusinessError = error as BusinessError;
-      console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
+      log.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
       return `Failed to check access token. Code is ${err.code}, message is ${err.message}`;
     }
-    return resultsStatus;
   }
+
   /**
    * 检查多个权限的授权状态
    * */
   async checkMultiple(permissions: Array<Permissions>): Promise<Object> {
     let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
     let grantStatus: Record<string, GrantStatus> = {};
+
     // 获取应用程序的accessTokenID
-    let tokenId: number = 0;
-    try {
-      let bundleInfo: bundleManager.BundleInfo = await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
-      let appInfo: bundleManager.ApplicationInfo = bundleInfo.appInfo;
-      tokenId = appInfo.accessTokenId;
-    } catch (error) {
-      let err: BusinessError = error as BusinessError;
-      console.error(`Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`);
-      return `Failed to get bundle info for self. Code is ${err.code}, message is ${err.message}`
-    }
+    let tokenId: number = await this.getTokenId();
     for (let index = 0; index < permissions.length; index++) {
       // 校验应用是否被授予权限
       try {
         const Status = await atManager.checkAccessToken(tokenId, permissions[index]);
-        grantStatus[permissions[index]] = this.checkStatus(Status);
+        grantStatus[permissions[index]] = this.getCheckGrantStatus(Status);
       } catch (error) {
         let err: BusinessError = error as BusinessError;
-        console.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
-        return `Failed to check access token. Code is ${err.code}, message is ${err.message}`
+        log.error(`Failed to check access token. Code is ${err.code}, message is ${err.message}`);
+        return `Failed to check access token. Code is ${err.code}, message is ${err.message}`;
       }
     }
     return grantStatus;
@@ -72,7 +55,6 @@ export class PermissionsModule extends TurboModule {
    */
   async request(permissions: Permissions): Promise<string> {
     let grantStatus: string = await this.check(permissions);
-    let resultsStatus: GrantStatus = GrantStatus.PERMISSION_BLOCKED;
     if (grantStatus === GrantStatus.PERMISSION_GRANTED) {
       // 已经授权，可以继续访问目标操作
       return grantStatus;
@@ -81,12 +63,12 @@ export class PermissionsModule extends TurboModule {
       let atManager: abilityAccessCtrl.AtManager = abilityAccessCtrl.createAtManager();
       try {
         let context = this.ctx.uiAbilityContext;
-        const resultData = await atManager.requestPermissionsFromUser(context, [permissions])
-        resultsStatus = this.checkStatus(resultData.authResults[0])
-        return resultsStatus;
+        const resultData = await atManager.requestPermissionsFromUser(context, [permissions]);
+        return this.getRequestGrantStatus(resultData.authResults[0], resultData.dialogShownResults[0]);
       } catch (err) {
-        console.error(`catch err->${JSON.stringify(err)}`);
-        return `catch err->${JSON.stringify(err)}`;
+        let target: BusinessError = err as BusinessError;
+        log.error(`request, request permission failed, error code: ${target.code}`);
+        return `request catch err->${JSON.stringify(err)}`;
       }
     }
   }
@@ -101,15 +83,17 @@ export class PermissionsModule extends TurboModule {
       let context = this.ctx.uiAbilityContext;
       const resultData = await atManager.requestPermissionsFromUser(context, permissions)
       for (let index = 0; index < resultData.authResults.length; index++) {
-        const status = this.checkStatus(resultData.authResults[index]);
+        const status = this.getRequestGrantStatus(resultData.authResults[index], resultData.dialogShownResults[index]);
         resultsStatus[permissions[index]] = status;
       }
       return resultsStatus;
     } catch (err) {
-      console.error(`catch err->${JSON.stringify(err)}`);
-      return `catch err->${JSON.stringify(err)}`;
+      let target: BusinessError = err as BusinessError;
+      log.error(`requestMultiple, request permissions failed, error code: ${target.code}`);
+      return `requestMultiple catch err->${JSON.stringify(err)}`;
     }
   }
+
   /**
    * 应用请求通知使能
    * */
@@ -119,9 +103,9 @@ export class PermissionsModule extends TurboModule {
         resolve({
           status: GrantStatus.PERMISSION_GRANTED,
           settings: {}
-        })
+        });
       }).catch((err: Base.BusinessError) => {
-        reject(err)
+        reject(err);
       });
     })
   }
@@ -135,9 +119,9 @@ export class PermissionsModule extends TurboModule {
         resolve({
           status: data ? GrantStatus.PERMISSION_GRANTED : GrantStatus.PERMISSION_BLOCKED,
           settings: {}
-        })
+        });
       }).catch((err: Base.BusinessError) => {
-        reject(err)
+        reject(err);
       });
     })
   }
@@ -151,8 +135,13 @@ export class PermissionsModule extends TurboModule {
       bundleName: 'com.huawei.hmos.settings',
       abilityName: 'com.huawei.hmos.settings.MainAbility'
     };
-    await context.startAbility(want)
+    try {
+      await context.startAbility(want);
+    } catch (e) {
+      log.error(`openSettings, start ability failed, error code ${(e as BusinessError).code}`)
+    }
   }
+
   /**
    * 用来打开图片选择
    * */
@@ -164,15 +153,50 @@ export class PermissionsModule extends TurboModule {
       let photoPicker = new photoAccessHelper.PhotoViewPicker();
       photoPicker.select(PhotoSelectOptions).then((PhotoSelectResult: photoAccessHelper.PhotoSelectResult) => {
       }).catch((err: BusinessError) => {
-        console.error(`PhotoViewPicker.select failed with err: ${err.code}, ${err.message}`);
+        log.error(`openPhotoPicker, PhotoViewPicker.select failed with err: ${err.code}`);
       });
     } catch (error) {
       let err: BusinessError = error as BusinessError;
-      console.error(`PhotoViewPicker failed with err: ${err.code}, ${err.message}`);
+      log.error(`openPhotoPicker, PhotoViewPicker failed with err: ${err.code}`);
     }
   }
 
-  private checkStatus(status: number): GrantStatus {
-    return status === -1 ? GrantStatus.PERMISSION_BLOCKED : status === 0 ? GrantStatus.PERMISSION_GRANTED : GrantStatus.PERMISSION_UNAVAILABLE;
+  private getCheckGrantStatus(status: number): GrantStatus {
+    let resultStatus: GrantStatus = GrantStatus.PERMISSION_UNAVAILABLE;
+    if (status === -1) {
+      resultStatus = GrantStatus.PERMISSION_DENIED;
+    } else if (status === 0) {
+      resultStatus = GrantStatus.PERMISSION_GRANTED;
+    } else {
+      log.warn(`getCheckGrantStatus, grantStatus unknown, status: ${status}}`);
+    }
+    return resultStatus;
+  }
+
+  private getRequestGrantStatus(status: number, dialogShownResult: boolean = true): GrantStatus {
+    let resultStatus: GrantStatus = GrantStatus.PERMISSION_UNAVAILABLE;
+    if (status === -1) {
+      resultStatus = dialogShownResult ? GrantStatus.PERMISSION_DENIED : GrantStatus.PERMISSION_BLOCKED;
+    } else if (status === 0) {
+      resultStatus = GrantStatus.PERMISSION_GRANTED;
+    } else if (status === 2) {
+      resultStatus = GrantStatus.PERMISSION_UNAVAILABLE;
+    } else {
+      log.warn(`getRequestGrantStatus, grantStatus unknown, status: ${status}}`);
+    }
+    return resultStatus;
+  }
+
+  private async getTokenId(): Promise<number> {
+    try {
+      let bundleInfo: bundleManager.BundleInfo =
+        await bundleManager.getBundleInfoForSelf(bundleManager.BundleFlag.GET_BUNDLE_INFO_WITH_APPLICATION);
+      let appInfo: bundleManager.ApplicationInfo = bundleInfo.appInfo;
+      return appInfo.accessTokenId;
+    } catch (error) {
+      let err: BusinessError = error as BusinessError;
+      log.error(`getTokenId, get tokenId failed, error code: ${err.message}`);
+      return -1;
+    }
   }
 }
